@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+ros_projects/bag_files/*
+ros_projects/dev_ws/build/*
+ros_projects/dev_ws/install/*
+ros_projects/dev_ws/log/*
+
+__pycache__/
