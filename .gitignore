@@ -37,3 +37,15 @@ ros_projects/dev_ws/install/*
 ros_projects/dev_ws/log/*
 
 __pycache__/
+
+._*
+*.pycache
+.DS_Stire
+.vscode
+Thumbs.db
+.idea
+**build/
+**install/
+**log/
+**/bag_files/
+__pycache__
