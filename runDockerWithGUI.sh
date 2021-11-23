@@ -3,7 +3,7 @@
 echo "ROS2 PROJECTS PATH              = ${PWD}/ros_projects"
 
 HOSTPATH=${PWD}/ros_projects
-CONTAINERPATH=/home/rosfoxyuser/ros_projects
+CONTAINERPATH=/home/ros_projects
 
 echo "HOST BINDMOUNT PATH         = ${HOSTPATH}"
 echo "CONTAINER BINDMOUNT PATH    = ${CONTAINERPATH}"
