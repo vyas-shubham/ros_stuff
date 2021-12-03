@@ -124,13 +124,13 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
     std::string cmd_vel_string_ = toHexString(cmd_vel);
 
     // Testing Code
-    std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
-    std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
-    return true;
+    // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
+    // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
+    // return true;
 
     // Send Commands.
-    // if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
-    // else return false;
+    if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+    else return false;
 
 
 }
