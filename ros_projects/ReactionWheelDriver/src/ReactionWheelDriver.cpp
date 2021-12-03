@@ -124,13 +124,13 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
     std::string cmd_vel_string_ = toHexString(cmd_vel);
 
     // Testing Code
-    // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
-    // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
-    // return true;
+    std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
+    std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
+    return true;
 
     // Send Commands.
-    if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
-    else return false;
+    // if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+    // else return false;
 
 
 }
@@ -159,50 +159,10 @@ bool ReactionWheelController::writeMotorRegister(std::string writeRegister, std:
     else return false;
 }
 
-std::string ReactionWheelController::toHexString(int n)
+std::string ReactionWheelController::toHexString(int i )
 {
-    std::string s;
-        bool negsign = false;
-    int result[8]={0,0,0,0,0,0,0,0};
-    int remain[8]={0,0,0,0,0,0,0,0};
-    if(n < 0 ){
-        negsign = true;
-        n= -n;
-    }
-    for(int i = 8 ; i > 0 ; i--){
-        remain[i-1] = n % 16;
-        n /= 16;
-    }
-    if(negsign){
-        int sub[8]={15,15,15,15,15,15,15,16};
-        for(int i = 7 ; i >= 0 ; i--)
-            result[i] = sub[i] - remain[i];
-    }
-    else
-        for(int i = 7 ; i >= 0 ; i--)
-            result[i] = remain[i];
-
-    for(int j = 0 ; j < 8 ; j++){
-        if(result[j] < 10)
-            s = s+char(result[j] + 48);//result[j]+ s;
-        else
-            if(result[j] == 10)
-            s = s+ "A";
-        else
-            if(result[j] == 11)
-                s = s+ "B";
-        else
-            if(result[j] == 12)
-            s = s+ "C";
-        else
-            if(result[j] == 13)
-                s = s+"D" ;
-        else
-            if(result[j] == 14)
-                s = s+ "E" ;
-        else
-            if(result[j] == 15)
-                s = s+"F";
-    }
-    return s;
-}//To Hex
+  std::stringstream stream;
+  stream << std::setfill ('0') << std::setw(sizeof(i)*2) 
+         << std::uppercase << std::hex << i;
+  return stream.str();
+}

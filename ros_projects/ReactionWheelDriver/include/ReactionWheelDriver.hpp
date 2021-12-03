@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cassert>
 #include <sstream>
+#include <iomanip>
 #include "restclient-cpp/restclient.h"
 
 
@@ -26,7 +27,7 @@ class ReactionWheelController {
 		bool isMotorEnabled = false;
         bool readMotorRegister(std::string readRegister, std::string &readValue);
 		bool writeMotorRegister(std::string writeRegister, std::string writeValue);
-        std::string toHexString(int n);
+        std::string toHexString(int i);
 
 	// For understanding Command Dictionary and the set values 
 	// see: https://en.nanotec.com/products/manual/N5_CAN_EN/object_dictionary%252Fobject_dir_intro.html
