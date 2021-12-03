@@ -28,5 +28,5 @@ link_directories(/usr/local/lib)
 
 find_library(restclient-cpp REQUIRED)
 
-add_executable(${PROJECT_NAME} ${SOURCE_DIR}/ReactionWheelDriver.cpp ${HEADER_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_DIR}/ReactionWheelTest.cpp ${HEADER_FILES})
 target_link_libraries(${PROJECT_NAME} restclient-cpp)
