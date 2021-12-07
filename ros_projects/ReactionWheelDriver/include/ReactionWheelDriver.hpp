@@ -19,12 +19,18 @@ class ReactionWheelController {
         bool enableReactionWheel();
 		bool disableReactionWheel();
         static const inline std::string DEFAULT_MOTOR_ADDRESS = "192.168.1.155";
-		float max_velocity_rpm = 500.0;  	// 500 rpm max velocity
+		float max_velocity_rpm = 1000.0;  	// 500 rpm max velocity
 		bool readCurrentVelocityRPM(int &read_vel);
         bool readCurrentVelocity(float &read_vel);
-        bool sendVelocityCommandRPM(int cmd_vel); 
+        bool sendVelocityCommandRPM(int cmd_vel);
+		bool sendVelocityCommand(float cmd_vel);
+		bool sendTorqueCommand(float cmd_torque);
+		bool enableTorqueMode();
+		bool disableTorqueMode(); 		// Back to Velocity Mode
     private:
 		bool isMotorEnabled = false;
+		bool torqueModeEnabled = false;
+
         bool readMotorRegister(std::string readRegister, std::string &readValue);
 		bool writeMotorRegister(std::string writeRegister, std::string writeValue);
         std::string toHexString(int i);
@@ -48,6 +54,8 @@ class ReactionWheelController {
 		{"608F/01", "00001000"}, // Encoder Increments for user defined inputs (4bytes): 4096 
 		{"2052/00", "00001000"}, // Physical Encoder Increments: 4096
 
+		// Motor DB80M048030-ENM05J Actual Current Params: 
+		// Rated: 14A, Peak: 40A
 		{"2031/00", "00002EE0"}, // Current max mA (4bytes): 12000 
 		{"203B/01", "00002EE0"}, // Current nom mA (4bytes): 12000
 		{"203B/02", "00000064"}, // Max current duration (4bytes): 100
@@ -70,6 +78,9 @@ class ReactionWheelController {
 	const std::string disable_motor_cmd_ = "0007";
 	const std::string motor_vel_cmd_register_ = "60FF/00";
 	const std::string motor_vel_read_register_ = "606C/00";
+	const std::string torque_mode_regster_ = "6060/00";
+	const std::string enable_torque_cmd_ = "04";
+	const std::string disable_torque_cmd_ = "03"; 		// Switch back to Velocity Mode
 };
 
 #endif // REACTION_WHEEL_HPP

@@ -109,29 +109,46 @@ bool ReactionWheelController::readCurrentVelocity(float &read_vel)
 
 bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
 {
-    // Check for limits
-    if (cmd_vel > max_velocity_rpm)
+    if (isMotorEnabled)
     {
-        cmd_vel = max_velocity_rpm;
-        std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_velocity_rpm << std::endl;
+        // Check for limits
+        if (cmd_vel > max_velocity_rpm)
+        {
+            cmd_vel = max_velocity_rpm;
+            std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_velocity_rpm << std::endl;
+        }
+        else if (cmd_vel < -max_velocity_rpm)
+        {
+            cmd_vel = -max_velocity_rpm;
+            std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
+        }
+
+        std::string cmd_vel_string_ = toHexString(cmd_vel);
+
+        // Testing Code: Print Hex Command Instead of sending.
+        std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
+        std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
+        return true;
+
+        // Send Commands.
+        // if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+        // else return false;
     }
-    else if (cmd_vel < -max_velocity_rpm)
+    else 
     {
-        cmd_vel = -max_velocity_rpm;
-        std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
+        std::cout << "Motor Not enabled. Cannot command velocity" << std::endl;
+        return false;
     }
 
-    std::string cmd_vel_string_ = toHexString(cmd_vel);
 
-    // Testing Code
-    // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
-    // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
-    // return true;
+}
 
-    // Send Commands.
-    if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+bool ReactionWheelController::sendVelocityCommand(float cmd_vel)
+{
+    // Convert to RPM as Motor Works with that Unit
+    int cmd_vel_rpm = (int)(cmd_vel*9.5493);
+    if (sendVelocityCommandRPM(cmd_vel_rpm)) return true;
     else return false;
-
 
 }
 
@@ -165,4 +182,71 @@ std::string ReactionWheelController::toHexString(int i )
   stream << std::setfill ('0') << std::setw(sizeof(i)*2) 
          << std::uppercase << std::hex << i;
   return stream.str();
+}
+
+
+
+bool ReactionWheelController::enableTorqueMode()
+{
+    if (isMotorEnabled)
+    {
+        if (torqueModeEnabled)
+        {
+            std::cout << "Torque Mode Is already Enabled!";
+            return true;
+        }
+        else
+        {
+            if (writeMotorRegister(torque_mode_regster_, enable_torque_cmd_))
+            {
+                std::cout << "Torque Mode Enabled." << std::endl;
+                torqueModeEnabled = true;
+                return true;
+            }
+            else
+            {
+                std::cout << "Unable to enable Torque Mode!" << std::endl;
+                torqueModeEnabled = false;
+                return false;
+            }
+        }
+    }
+    else
+    {
+        std::cout << "Enable Motor First!" << std::endl;
+        return false;
+    }
+
+}
+
+bool ReactionWheelController::disableTorqueMode()
+{
+    if (isMotorEnabled)
+    {
+        if (!torqueModeEnabled)
+        {
+            std::cout << "Torque Mode Is already Disabled!";
+            return true;
+        }
+        else
+        {
+            if (writeMotorRegister(torque_mode_regster_, disable_torque_cmd_))
+            {
+                std::cout << "Torque Mode Disabled." << std::endl;
+                torqueModeEnabled = false;
+                return true;
+            }
+            else 
+            {
+                std::cout << "Unable to Disable Torque Mode!" << std::endl;
+                return false;
+            }
+        }
+    }
+    else
+    {
+        std::cout << "Enable Motor First!" << std::endl;
+        return false;
+    }
+    
 }
