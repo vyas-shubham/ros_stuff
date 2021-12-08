@@ -19,6 +19,8 @@ class ReactionWheelController {
         bool enableReactionWheel();
 		bool disableReactionWheel();
         static const inline std::string DEFAULT_MOTOR_ADDRESS = "192.168.1.155";
+		const float motor_torque_constant = 0.12;		// 12 Ncm/A or 0.12Nm/A
+		const float max_torque = motor_torque_constant * 12;
 		float max_velocity_rpm = 1000.0;  	// 500 rpm max velocity
 		bool readCurrentVelocityRPM(int &read_vel);
         bool readCurrentVelocity(float &read_vel);
@@ -33,11 +35,13 @@ class ReactionWheelController {
 
         bool readMotorRegister(std::string readRegister, std::string &readValue);
 		bool writeMotorRegister(std::string writeRegister, std::string writeValue);
-        std::string toHexString(int i);
+        std::string toHexString32Bit(int i);
+		std::string toHexString16Bit(int i);
 
 	// For understanding Command Dictionary and the set values 
 	// see: https://en.nanotec.com/products/manual/N5_CAN_EN/object_dictionary%252Fobject_dir_intro.html
 	// All Values are hex strings
+	// Motor: https://en.nanotec.com/products/2245-db80m048030-enm05j
 	std::map<std::string, std::string> motor_setup_params = 
 	{
 		{"3210/01", "000003E8"}, // POS P (4bytes): 1000
@@ -55,14 +59,14 @@ class ReactionWheelController {
 		{"2052/00", "00001000"}, // Physical Encoder Increments: 4096
 
 		// Motor DB80M048030-ENM05J Actual Current Params: 
-		// Rated: 14A, Peak: 40A
+		// Rated: 14A, Peak: 40A. Set in Controller: 12A
 		{"2031/00", "00002EE0"}, // Current max mA (4bytes): 12000 
 		{"203B/01", "00002EE0"}, // Current nom mA (4bytes): 12000
 		{"203B/02", "00000064"}, // Max current duration (4bytes): 100
 
 		{"6072/00", "03E8"},     // Max Torque (2bytes): 1000
 		{"6087/00", "000003E8"}, // Torque Slope (4bytes): 1000
-        // {"6046/02", "000001F4"}, // Max Velocity Limit in User Defined Units (default: rpm) (4bytes): 500
+        {"6046/02", "000003E8"}, // Max Velocity Limit in User Defined Units (default: rpm) (4bytes): 1000
 		{"60FF/00", "00000000"}, // Set Initial Velocity in User Defined Units (default: rpm) (4bytes): 0
 		{"6060/00", "03"},       // Operation Mode (1byte int): 3 (Profile Velocity Mode) 
 		// Control Words for Motor State Machine Control (2bytes)
@@ -81,6 +85,7 @@ class ReactionWheelController {
 	const std::string torque_mode_regster_ = "6060/00";
 	const std::string enable_torque_cmd_ = "04";
 	const std::string disable_torque_cmd_ = "03"; 		// Switch back to Velocity Mode
+	const std::string motor_torque_cmd_register_ = "6071/00";
 };
 
 #endif // REACTION_WHEEL_HPP

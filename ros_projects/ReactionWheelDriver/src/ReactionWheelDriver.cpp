@@ -123,7 +123,7 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
             std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
         }
 
-        std::string cmd_vel_string_ = toHexString(cmd_vel);
+        std::string cmd_vel_string_ = toHexString32Bit(cmd_vel);
 
         // Testing Code: Print Hex Command Instead of sending.
         std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
@@ -176,10 +176,18 @@ bool ReactionWheelController::writeMotorRegister(std::string writeRegister, std:
     else return false;
 }
 
-std::string ReactionWheelController::toHexString(int i )
+std::string ReactionWheelController::toHexString32Bit(int i )
 {
   std::stringstream stream;
   stream << std::setfill ('0') << std::setw(sizeof(i)*2) 
+         << std::uppercase << std::hex << i;
+  return stream.str();
+}
+
+std::string ReactionWheelController::toHexString16Bit(int i )
+{
+  std::stringstream stream;
+  stream << std::setfill ('0') << std::setw(sizeof(i)) 
          << std::uppercase << std::hex << i;
   return stream.str();
 }
@@ -249,4 +257,25 @@ bool ReactionWheelController::disableTorqueMode()
         return false;
     }
     
+}
+
+bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
+{
+    if (isMotorEnabled)
+    {
+        if (torqueModeEnabled)
+        {
+            return true;
+        }
+        else
+        {
+            std::cout << "Torque Mode Not Enabled." << std::endl;
+            return false;
+        }
+    }
+    else
+    {
+        std::cout << "Motor Not Enabled." << std::endl;
+        return false;
+    }
 }
