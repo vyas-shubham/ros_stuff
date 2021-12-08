@@ -179,7 +179,7 @@ bool ReactionWheelController::writeMotorRegister(std::string writeRegister, std:
 std::string ReactionWheelController::toHexString32Bit(int i )
 {
   std::stringstream stream;
-  stream << std::setfill ('0') << std::setw(sizeof(i)*2) 
+  stream << std::setfill ('0') << std::setw(8)
          << std::uppercase << std::hex << i;
   return stream.str();
 }
@@ -187,7 +187,7 @@ std::string ReactionWheelController::toHexString32Bit(int i )
 std::string ReactionWheelController::toHexString16Bit(int i )
 {
   std::stringstream stream;
-  stream << std::setfill ('0') << std::setw(sizeof(i)) 
+  stream << std::setfill ('0') << std::setw(4)
          << std::uppercase << std::hex << i;
   return stream.str();
 }
@@ -265,7 +265,35 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
     {
         if (torqueModeEnabled)
         {
+            // Check for limits
+            if (cmd_torque > max_torque)
+            {
+            cmd_torque = max_torque;
+            std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_torque << std::endl;
+            }
+            else if (cmd_torque < -max_torque)
+            {
+            cmd_torque = -max_torque;
+            std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_torque << std::endl;
+            }
+
+            // Find Percentage of Max Torque Commanded as that is the motor torque unit
+            float torque_cmd_percentage_ = (cmd_torque / max_torque) * 100; 
+            
+            // Motor Cmd is "tenths of a percent of the rated torque"
+            // This object is calculated as thousandths of the torque, e.g., the value "500" means
+            // "50%" of the rated torque; "1100" is equivalent to 110%. The rated torque corresponds
+            // to the rated current in object 203Bh:01.
+            float cmd_torque_to_send_ = torque_cmd_percentage_ * 10;
+            
+            // Testing Code: Print Hex Command Instead of sending.
+            std::cout << "Writing to register: " << motor_torque_cmd_register_ << std::endl;
+            std::cout << "Writing Value: " << toHexString16Bit(cmd_torque_to_send_) << std::endl;
             return true;
+
+            // Send Commands.
+            // if (writeMotorRegister(motor_torque_cmd_register_, toHexString16Bit(cmd_torque_to_send_))) return true;
+            // else return false;
         }
         else
         {

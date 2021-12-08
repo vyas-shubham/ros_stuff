@@ -66,7 +66,8 @@ class ReactionWheelController {
 
 		{"6072/00", "03E8"},     // Max Torque (2bytes): 1000
 		{"6087/00", "000003E8"}, // Torque Slope (4bytes): 1000
-        {"6046/02", "000003E8"}, // Max Velocity Limit in User Defined Units (default: rpm) (4bytes): 1000
+        {"6046/02", "000003E8"}, // Max Velocity Limit (Velocity Mode) in User Defined Units (default: rpm) (4bytes): 1000
+		{"2032/00", "000003E8"}, // Max Velocity Limit (Torque Mode) in User Defined Units (default: rpm) (4bytes): 1000
 		{"60FF/00", "00000000"}, // Set Initial Velocity in User Defined Units (default: rpm) (4bytes): 0
 		{"6060/00", "03"},       // Operation Mode (1byte int): 3 (Profile Velocity Mode) 
 		// Control Words for Motor State Machine Control (2bytes)
