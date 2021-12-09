@@ -29,14 +29,14 @@ class ReactionWheelController {
 		bool sendTorqueCommand(float cmd_torque);
 		bool enableTorqueMode();
 		bool disableTorqueMode(); 		// Back to Velocity Mode
+		bool faultReset();
     private:
 		bool isMotorEnabled = false;
 		bool torqueModeEnabled = false;
 
         bool readMotorRegister(std::string readRegister, std::string &readValue);
 		bool writeMotorRegister(std::string writeRegister, std::string writeValue);
-        std::string toHexString32Bit(int i);
-		std::string toHexString16Bit(int i);
+		std::string toHexString(int i, int bits);
 
 	// For understanding Command Dictionary and the set values 
 	// see: https://en.nanotec.com/products/manual/N5_CAN_EN/object_dictionary%252Fobject_dir_intro.html
@@ -81,12 +81,14 @@ class ReactionWheelController {
 	const std::string motor_command_register_ = "6040/00";
 	const std::string enable_motor_cmd_ = "000F";
 	const std::string disable_motor_cmd_ = "0007";
+	const std::string fault_reset_cmd_ = "0027";
 	const std::string motor_vel_cmd_register_ = "60FF/00";
 	const std::string motor_vel_read_register_ = "606C/00";
-	const std::string torque_mode_regster_ = "6060/00";
+	const std::string motor_mode_register_ = "6060/00";
 	const std::string enable_torque_cmd_ = "04";
 	const std::string disable_torque_cmd_ = "03"; 		// Switch back to Velocity Mode
 	const std::string motor_torque_cmd_register_ = "6071/00";
+	const std::string vel_polarity_register_ = "607E";
 };
 
 #endif // REACTION_WHEEL_HPP

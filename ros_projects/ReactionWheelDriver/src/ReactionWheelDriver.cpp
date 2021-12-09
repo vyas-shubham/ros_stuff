@@ -69,6 +69,12 @@ bool ReactionWheelController::disableReactionWheel()
     
 }
 
+bool ReactionWheelController::faultReset()
+{
+    if(writeMotorRegister(motor_command_register_, fault_reset_cmd_)) return true;
+    else return false;
+}
+
 bool ReactionWheelController::readCurrentVelocityRPM(int &read_vel)
 {
     std::string raw_vel_value_;
@@ -123,16 +129,16 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
             std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
         }
 
-        std::string cmd_vel_string_ = toHexString32Bit(cmd_vel);
+        std::string cmd_vel_string_ = toHexString(cmd_vel, 32);
 
         // Testing Code: Print Hex Command Instead of sending.
-        std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
-        std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
-        return true;
+        // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
+        // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
+        // return true;
 
         // Send Commands.
-        // if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
-        // else return false;
+        if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+        else return false;
     }
     else 
     {
@@ -176,23 +182,13 @@ bool ReactionWheelController::writeMotorRegister(std::string writeRegister, std:
     else return false;
 }
 
-std::string ReactionWheelController::toHexString32Bit(int i )
+std::string ReactionWheelController::toHexString(int i, int bits)
 {
-  std::stringstream stream;
-  stream << std::setfill ('0') << std::setw(8)
-         << std::uppercase << std::hex << i;
-  return stream.str();
+    std::stringstream stream;
+    stream << std::setfill ('0') << std::setw(bits/4)
+            << std::uppercase << std::hex << i;
+    return stream.str();
 }
-
-std::string ReactionWheelController::toHexString16Bit(int i )
-{
-  std::stringstream stream;
-  stream << std::setfill ('0') << std::setw(4)
-         << std::uppercase << std::hex << i;
-  return stream.str();
-}
-
-
 
 bool ReactionWheelController::enableTorqueMode()
 {
@@ -205,7 +201,7 @@ bool ReactionWheelController::enableTorqueMode()
         }
         else
         {
-            if (writeMotorRegister(torque_mode_regster_, enable_torque_cmd_))
+            if (writeMotorRegister(motor_mode_register_, enable_torque_cmd_))
             {
                 std::cout << "Torque Mode Enabled." << std::endl;
                 torqueModeEnabled = true;
@@ -238,7 +234,7 @@ bool ReactionWheelController::disableTorqueMode()
         }
         else
         {
-            if (writeMotorRegister(torque_mode_regster_, disable_torque_cmd_))
+            if (writeMotorRegister(motor_mode_register_, disable_torque_cmd_))
             {
                 std::cout << "Torque Mode Disabled." << std::endl;
                 torqueModeEnabled = false;
@@ -288,7 +284,7 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
             
             // Testing Code: Print Hex Command Instead of sending.
             std::cout << "Writing to register: " << motor_torque_cmd_register_ << std::endl;
-            std::cout << "Writing Value: " << toHexString16Bit(cmd_torque_to_send_) << std::endl;
+            std::cout << "Writing Value: " << toHexString(cmd_torque_to_send_, 16) << std::endl;
             return true;
 
             // Send Commands.
@@ -307,3 +303,4 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
         return false;
     }
 }
+
