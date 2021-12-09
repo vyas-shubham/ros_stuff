@@ -80,18 +80,27 @@ bool ReactionWheelController::readCurrentVelocityRPM(int &read_vel)
     std::string raw_vel_value_;
     std::stringstream temp_sstring_;
     int temp_vel_;
+    bool vel_negative_polarity_ = false;
+    std::string raw_vel_polarity_;
+    if (readMotorRegister(vel_polarity_register_, raw_vel_polarity_))
+    {
+        int  vel_polarity_ = hexStringToInt(raw_vel_polarity_);
+        // If 8 bit polarity is either 01000000 or 11000000 the velocity is negative.
+        // https://en.nanotec.com/products/manual/N5_CAN_EN/object_dictionary%252Fod_motion_0x607E.html
+        if (vel_polarity_==64 || vel_polarity_==192) vel_negative_polarity_ = true;
+        else vel_negative_polarity_ = false;
+    }
+    else
+    {
+        std::cout << "Velocity Polarity Read Failed!" << std::endl;
+        return false;
+    }
+
     if(readMotorRegister(motor_vel_read_register_, raw_vel_value_))
     {
-        // Remove Double Quotes from received string
-        if (raw_vel_value_.at(0) == '"')
-        {
-            raw_vel_value_.erase(0,1);
-            raw_vel_value_.erase(raw_vel_value_.size()-1);
-        }
-        // Convert string to int
-        temp_sstring_ << std::hex << raw_vel_value_;
-        temp_sstring_ >> temp_vel_;
-        read_vel = static_cast<int>(temp_vel_);
+        int abs_vel_ = hexStringToInt(raw_vel_value_);
+        if (vel_negative_polarity_) read_vel = -abs_vel_;
+        else read_vel = abs_vel_;
         return true;
     }
     else 
@@ -127,6 +136,24 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
         {
             cmd_vel = -max_velocity_rpm;
             std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
+        }
+
+        if (cmd_vel < 0)
+        {
+            cmd_vel = -cmd_vel;
+            if (!writeMotorRegister(vel_polarity_register_, vel_negative_direction_cmd_)) 
+            {
+                std::cout << "Unable to change to Negative Polarity." << std::endl;
+                return false;
+            }
+        }
+        else 
+        {
+            if (!writeMotorRegister(vel_polarity_register_, vel_positive_direction_cmd_)) 
+            {
+                std::cout << "Unable to change to Positive Polarity." << std::endl;
+                return false;
+            }
         }
 
         std::string cmd_vel_string_ = toHexString(cmd_vel, 32);
@@ -179,7 +206,12 @@ bool ReactionWheelController::writeMotorRegister(std::string writeRegister, std:
     std::string content_type = "application/x-www-form-urlencoded";
     RestClient::Response resp_  = RestClient::post(write_address, content_type, cmd_value_);
     if(resp_.code==200) return true;
-    else return false;
+    // else return false;
+    else
+    {
+        std::cout << "Response Code: " << resp_.code << std::endl;
+        return false;
+    }
 }
 
 std::string ReactionWheelController::toHexString(int i, int bits)
@@ -188,6 +220,22 @@ std::string ReactionWheelController::toHexString(int i, int bits)
     stream << std::setfill ('0') << std::setw(bits/4)
             << std::uppercase << std::hex << i;
     return stream.str();
+}
+
+int ReactionWheelController::hexStringToInt(std::string hexString)
+{
+    std::stringstream temp_sstring_;
+    int temp_vel_;
+    // Remove Double Quotes from received string
+    if (hexString.at(0) == '"')
+    {
+        hexString.erase(0,1);
+        hexString.erase(hexString.size()-1);
+    }
+    // Convert string to int
+    temp_sstring_ << std::hex << hexString;
+    temp_sstring_ >> temp_vel_;
+    return static_cast<int>(temp_vel_);
 }
 
 bool ReactionWheelController::enableTorqueMode()

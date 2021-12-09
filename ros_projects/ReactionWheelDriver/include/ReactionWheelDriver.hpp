@@ -37,6 +37,7 @@ class ReactionWheelController {
         bool readMotorRegister(std::string readRegister, std::string &readValue);
 		bool writeMotorRegister(std::string writeRegister, std::string writeValue);
 		std::string toHexString(int i, int bits);
+		int hexStringToInt(std::string hexString);
 
 	// For understanding Command Dictionary and the set values 
 	// see: https://en.nanotec.com/products/manual/N5_CAN_EN/object_dictionary%252Fobject_dir_intro.html
@@ -88,7 +89,9 @@ class ReactionWheelController {
 	const std::string enable_torque_cmd_ = "04";
 	const std::string disable_torque_cmd_ = "03"; 		// Switch back to Velocity Mode
 	const std::string motor_torque_cmd_register_ = "6071/00";
-	const std::string vel_polarity_register_ = "607E";
+	const std::string vel_polarity_register_ = "607E/00";
+	const std::string vel_negative_direction_cmd_ = "40";
+	const std::string vel_positive_direction_cmd_ = "00";
 };
 
 #endif // REACTION_WHEEL_HPP
