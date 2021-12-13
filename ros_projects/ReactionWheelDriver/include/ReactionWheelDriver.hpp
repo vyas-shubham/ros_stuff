@@ -21,7 +21,7 @@ class ReactionWheelController {
         static const inline std::string DEFAULT_MOTOR_ADDRESS = "192.168.1.155";
 		const float motor_torque_constant = 0.12;		// 12 Ncm/A or 0.12Nm/A
 		const float max_torque = motor_torque_constant * 12;
-		float max_velocity_rpm = 1000.0;  	// 500 rpm max velocity
+		int max_velocity_rpm = 1000;  	// 1000 rpm max velocity
 		bool readCurrentVelocityRPM(int &read_vel);
         bool readCurrentVelocity(float &read_vel);
         bool sendVelocityCommandRPM(int cmd_vel);
@@ -30,6 +30,8 @@ class ReactionWheelController {
 		bool enableTorqueMode();
 		bool disableTorqueMode(); 		// Back to Velocity Mode
 		bool faultReset();
+		bool currentTorqueDemand(int &tau_);
+		bool readMotorStatus(int &status);
     private:
 		bool isMotorEnabled = false;
 		bool torqueModeEnabled = false;
@@ -62,11 +64,12 @@ class ReactionWheelController {
 		// Motor DB80M048030-ENM05J Actual Current Params: 
 		// Rated: 14A, Peak: 40A. Set in Controller: 12A
 		{"2031/00", "00002EE0"}, // Current max mA (4bytes): 12000 
-		{"203B/01", "00002EE0"}, // Current nom mA (4bytes): 12000
+		// {"203B/01", "00002EE0"}, // Current nom mA (4bytes): 12000
+		{"203B/01", "00002710"}, // Current nom mA (4bytes): 12000
 		{"203B/02", "00000064"}, // Max current duration (4bytes): 100
 
 		{"6072/00", "03E8"},     // Max Torque (2bytes): 1000
-		{"6087/00", "000003E8"}, // Torque Slope (4bytes): 1000
+		{"6087/00", "000001F4"}, // Torque Slope (4bytes): 1000
         {"6046/02", "000003E8"}, // Max Velocity Limit (Velocity Mode) in User Defined Units (default: rpm) (4bytes): 1000
 		{"2032/00", "000003E8"}, // Max Velocity Limit (Torque Mode) in User Defined Units (default: rpm) (4bytes): 1000
 		{"60FF/00", "00000000"}, // Set Initial Velocity in User Defined Units (default: rpm) (4bytes): 0

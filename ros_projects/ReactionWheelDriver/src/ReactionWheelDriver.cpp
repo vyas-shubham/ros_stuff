@@ -2,7 +2,7 @@
 
 ReactionWheelController::ReactionWheelController(std::string motor_address=DEFAULT_MOTOR_ADDRESS) :
                                             motor_address_{motor_address}, isMotorEnabled{false},
-                                            max_velocity_rpm{500.0}
+                                            max_velocity_rpm{1000}
 {
     // Prepare URL from IP Address for REST/HTTP Communication
     motor_address_.insert(0, "http://");
@@ -126,54 +126,60 @@ bool ReactionWheelController::sendVelocityCommandRPM(int cmd_vel)
 {
     if (isMotorEnabled)
     {
-        // Check for limits
-        if (cmd_vel > max_velocity_rpm)
+        if(!torqueModeEnabled)
         {
-            cmd_vel = max_velocity_rpm;
-            std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_velocity_rpm << std::endl;
-        }
-        else if (cmd_vel < -max_velocity_rpm)
-        {
-            cmd_vel = -max_velocity_rpm;
-            std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
-        }
-
-        if (cmd_vel < 0)
-        {
-            cmd_vel = -cmd_vel;
-            if (!writeMotorRegister(vel_polarity_register_, vel_negative_direction_cmd_)) 
+            // Check for limits
+            if (cmd_vel > max_velocity_rpm)
             {
-                std::cout << "Unable to change to Negative Polarity." << std::endl;
-                return false;
+                cmd_vel = max_velocity_rpm;
+                std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_velocity_rpm << std::endl;
             }
+            else if (cmd_vel < -max_velocity_rpm)
+            {
+                cmd_vel = -max_velocity_rpm;
+                std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_velocity_rpm << std::endl;
+            }
+
+            if (cmd_vel < 0)
+            {
+                cmd_vel = -cmd_vel;
+                if (!writeMotorRegister(vel_polarity_register_, vel_negative_direction_cmd_)) 
+                {
+                    std::cout << "Unable to change to Negative Polarity." << std::endl;
+                    return false;
+                }
+            }
+            else 
+            {
+                if (!writeMotorRegister(vel_polarity_register_, vel_positive_direction_cmd_)) 
+                {
+                    std::cout << "Unable to change to Positive Polarity." << std::endl;
+                    return false;
+                }
+            }
+
+            std::string cmd_vel_string_ = toHexString(cmd_vel, 32);
+
+            // Testing Code: Print Hex Command Instead of sending.
+            // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
+            // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
+            // return true;
+
+            // Send Commands.
+            if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
+            else return false;
         }
         else 
         {
-            if (!writeMotorRegister(vel_polarity_register_, vel_positive_direction_cmd_)) 
-            {
-                std::cout << "Unable to change to Positive Polarity." << std::endl;
-                return false;
-            }
+            std::cout << "Torque Mode enabled. Cannot command velocity" << std::endl;
+            return false;
         }
-
-        std::string cmd_vel_string_ = toHexString(cmd_vel, 32);
-
-        // Testing Code: Print Hex Command Instead of sending.
-        // std::cout << "Writing to register: " << motor_vel_cmd_register_ << std::endl;
-        // std::cout << "Writing Value: " << cmd_vel_string_ << std::endl;
-        // return true;
-
-        // Send Commands.
-        if (writeMotorRegister(motor_vel_cmd_register_, cmd_vel_string_)) return true;
-        else return false;
     }
     else 
     {
         std::cout << "Motor Not enabled. Cannot command velocity" << std::endl;
         return false;
     }
-
-
 }
 
 bool ReactionWheelController::sendVelocityCommand(float cmd_vel)
@@ -252,6 +258,9 @@ bool ReactionWheelController::enableTorqueMode()
             if (writeMotorRegister(motor_mode_register_, enable_torque_cmd_))
             {
                 std::cout << "Torque Mode Enabled." << std::endl;
+                // std::string motor_mode_;
+                // readMotorRegister(motor_mode_register_, motor_mode_);
+                // std::cout << "Motor Mode: " <<  motor_mode_ << std::endl;
                 torqueModeEnabled = true;
                 return true;
             }
@@ -313,12 +322,12 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
             if (cmd_torque > max_torque)
             {
             cmd_torque = max_torque;
-            std::cout << "Command exceeded RPM limit. Commanding Max RPM: " << max_torque << std::endl;
+            std::cout << "Command exceeded torque limit. Commanding Max RPM: " << max_torque << std::endl;
             }
             else if (cmd_torque < -max_torque)
             {
             cmd_torque = -max_torque;
-            std::cout << "Command exceeded RPM limit. Commanding Min RPM: " << -max_torque << std::endl;
+            std::cout << "Command exceeded torque limit. Commanding Min RPM: " << -max_torque << std::endl;
             }
 
             // Find Percentage of Max Torque Commanded as that is the motor torque unit
@@ -328,16 +337,23 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
             // This object is calculated as thousandths of the torque, e.g., the value "500" means
             // "50%" of the rated torque; "1100" is equivalent to 110%. The rated torque corresponds
             // to the rated current in object 203Bh:01.
-            float cmd_torque_to_send_ = torque_cmd_percentage_ * 10;
+            int cmd_torque_to_send_ = (int)(torque_cmd_percentage_ * 10);
+            std::cout << "Commanded Torque in tenth percent: " << cmd_torque_to_send_ << std::endl;
             
             // Testing Code: Print Hex Command Instead of sending.
-            std::cout << "Writing to register: " << motor_torque_cmd_register_ << std::endl;
-            std::cout << "Writing Value: " << toHexString(cmd_torque_to_send_, 16) << std::endl;
-            return true;
+            // std::cout << "Writing to register: " << motor_torque_cmd_register_ << std::endl;
+            // std::cout << "Writing Value: " << toHexString(cmd_torque_to_send_, 16) << std::endl;
+            // return true;
 
             // Send Commands.
-            // if (writeMotorRegister(motor_torque_cmd_register_, toHexString16Bit(cmd_torque_to_send_))) return true;
-            // else return false;
+            if (writeMotorRegister(motor_torque_cmd_register_, toHexString(cmd_torque_to_send_, 16)))
+            {
+                std::string raw_register_val;
+                readMotorRegister(motor_torque_cmd_register_, raw_register_val);
+                std::cout << "Torque Command Sent: " <<  raw_register_val << std::endl;
+                return true;
+            }
+            else return false;
         }
         else
         {
@@ -352,3 +368,35 @@ bool ReactionWheelController::sendTorqueCommand(float cmd_torque)
     }
 }
 
+bool ReactionWheelController::currentTorqueDemand(int &tau_)
+{
+    std::string raw_register_val_;
+    if(!readMotorRegister("6074/00", raw_register_val_)) 
+    {
+        std::cout << "Reading Torque Demand Failed!" << std::endl;
+        return false;
+    }
+    else
+    {   
+        tau_ = hexStringToInt(raw_register_val_);
+        std::cout << "Raw Demanded Toque: " << raw_register_val_ << std::endl;
+        return true;
+    }
+}
+
+bool ReactionWheelController::readMotorStatus(int &status)
+{
+    std::string raw_register_val_;
+    if(!readMotorRegister("6041/00", raw_register_val_)) 
+    {
+        std::cout << "Reading Torque Demand Failed!" << std::endl;
+        return false;
+    }
+    else
+    {   
+        status = hexStringToInt(raw_register_val_);
+        std::cout << "Raw Motor Status: " << raw_register_val_ << std::endl;
+        return true;
+    }
+
+}
